@@ -80,6 +80,7 @@ function App() {
     cloud: 40,
     cybersecurity: 30
   });
+  const [roadmapTimeline, setRoadmapTimeline] = useState([]);
 
   // Auth Drawer States
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -170,11 +171,27 @@ function App() {
     }
   };
 
+  // Sync dynamic roadmap timeline based on skill gaps from database
+  const syncRoadmapTimeline = async () => {
+    try {
+      const endpoint = token ? `${API_URL}/roadmap/timeline` : `${API_URL}/roadmap/timeline?user_id=${userId}`;
+      const response = await axios.get(endpoint);
+      setRoadmapTimeline(response.data.steps || []);
+    } catch (err) {
+      console.warn("Could not sync dynamic career roadmap timeline:", err.message);
+    }
+  };
+
+  const handleChipClick = (level) => {
+    sendMessage(level);
+  };
+
   // Trigger metrics syncing on load
   useEffect(() => {
     syncDashboardMetrics();
     syncSavedRecommendations();
     syncUserProfile();
+    syncRoadmapTimeline();
   }, [token, userId]);
 
   // Parse courses from bot's text response to dynamically populate dashboard cards
@@ -639,7 +656,10 @@ function App() {
                 <LineChart className="w-4 h-4" /> Skills Competency
               </button>
               <button
-                onClick={() => setActiveTab("roadmap")}
+                onClick={() => {
+                  setActiveTab("roadmap");
+                  syncRoadmapTimeline();
+                }}
                 className={`flex items-center gap-2 text-xs md:text-sm font-semibold py-2 px-4 rounded-xl transition-all duration-300 ${
                   activeTab === "roadmap"
                     ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/15"
@@ -842,33 +862,68 @@ function App() {
                     <Compass className="w-5 h-5 text-indigo-400" /> Career Mastery Timeline
                   </h3>
                   <div className="relative border-l border-brand-border/60 pl-6 ml-4 space-y-8 py-2">
-                    <div className="relative">
-                      <div className="absolute -left-[31px] top-0 bg-indigo-600 border border-brand-border text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg shadow-indigo-600/35">
-                        1
+                    {roadmapTimeline.map((step, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-[31px] top-0 bg-indigo-600 border border-brand-border text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg shadow-indigo-600/35">
+                          {idx + 1}
+                        </div>
+                        <h4 className="text-sm font-bold text-white leading-tight">
+                          Upgrade: <span className="text-indigo-400 capitalize">{step.skill}</span> Requirement
+                        </h4>
+                        {step.course && step.course.title ? (
+                          <div className="mt-2 bg-[#121214] border border-brand-border rounded-xl p-3.5 flex flex-col gap-2">
+                            <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Recommended Course:</div>
+                            <div className="text-xs text-white font-bold">{step.course.title}</div>
+                            <div className="text-[10px] text-slate-400 uppercase tracking-widest">{step.course.provider} &bull; {step.course.level}</div>
+                            {step.course.link && (
+                              <a
+                                href={step.course.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-emerald-400 hover:underline inline-flex items-center gap-1 mt-1 font-bold"
+                              >
+                                Enroll Now <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-400 mt-1">
+                            Focus on mastering {step.skill} concepts, algorithms, and practical projects.
+                          </p>
+                        )}
                       </div>
-                      <h4 className="text-sm font-bold text-white leading-tight">Foundational Concepts</h4>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Master basic syntax, variables, algorithms, and development toolchains.
-                      </p>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute -left-[31px] top-0 bg-indigo-600 border border-brand-border text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg shadow-indigo-600/35">
-                        2
-                      </div>
-                      <h4 className="text-sm font-bold text-white leading-tight">Intermediate Applied Projects</h4>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Implement relational structures, build fully integrated services, and deploy functional REST APIs.
-                      </p>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute -left-[31px] top-0 bg-[#1e1e24] border border-brand-border text-slate-500 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold">
-                        3
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-400 leading-tight">Advanced System Engineering & AI</h4>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Deploy distributed micro-environments, orchestrate containers, and integrate complex neural models.
-                      </p>
-                    </div>
+                    ))}
+                    {roadmapTimeline.length === 0 && (
+                      <>
+                        <div className="relative">
+                          <div className="absolute -left-[31px] top-0 bg-indigo-600 border border-brand-border text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg shadow-indigo-600/35">
+                            1
+                          </div>
+                          <h4 className="text-sm font-bold text-white leading-tight">Foundational Concepts</h4>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Master basic syntax, variables, algorithms, and development toolchains.
+                          </p>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute -left-[31px] top-0 bg-indigo-600 border border-brand-border text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg shadow-indigo-600/35">
+                            2
+                          </div>
+                          <h4 className="text-sm font-bold text-white leading-tight">Intermediate Applied Projects</h4>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Implement relational structures, build fully integrated services, and deploy functional REST APIs.
+                          </p>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute -left-[31px] top-0 bg-[#1e1e24] border border-brand-border text-slate-500 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold">
+                            3
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-400 leading-tight">Advanced System Engineering & AI</h4>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Deploy distributed micro-environments, orchestrate containers, and integrate complex neural models.
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -924,7 +979,13 @@ function App() {
                         </select>
                       </div>
 
-                      <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl transition shadow-lg shadow-indigo-600/20">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fileInputRef.current?.click();
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl transition shadow-lg shadow-indigo-600/20"
+                      >
                         Select File
                       </button>
                       <span className="text-[10px] text-slate-500 mt-2">Supports PDF up to 4MB</span>
