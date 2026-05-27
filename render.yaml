@@ -1,0 +1,54 @@
+# Render.com Blueprint – Infrastructure as Code
+# https://render.com/docs/blueprint-spec
+#
+# Push this repo to GitHub, then:
+#   1. Go to https://dashboard.render.com
+#   2. Click "New" → "Blueprint"
+#   3. Connect your repository
+#   4. Render will auto-detect this file and create both services
+
+services:
+  # ─── Backend (Flask API) ───────────────────────────────────────────
+  - type: web
+    name: course-bot-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 backend.run:app
+    envVars:
+      - key: FLASK_DEBUG
+        value: false
+      - key: DATABASE_URL
+        value: sqlite:///recommender.db
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false  # You'll set this manually in dashboard
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+    healthCheckPath: /api/health
+
+  # ─── Frontend (Static Site) ───────────────────────────────────────
+  - type: web
+    name: course-bot-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://course-bot-api.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: /api

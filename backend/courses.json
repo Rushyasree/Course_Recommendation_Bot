@@ -1,0 +1,234 @@
+[
+  {
+    "title": "Introduction to Artificial Intelligence",
+    "category": "Artificial Intelligence",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["AI", "Machine Learning", "Beginner"],
+    "link": "https://www.coursera.org/learn/introduction-to-ai"
+  },
+  {
+    "title": "Machine Learning by Andrew Ng",
+    "category": "Artificial Intelligence",
+    "level": "Intermediate",
+    "provider": "Coursera",
+    "tags": ["ML", "Supervised Learning", "Data"],
+    "link": "https://www.coursera.org/learn/machine-learning"
+  },
+  {
+    "title": "Deep Learning Specialization",
+    "category": "Artificial Intelligence",
+    "level": "Advanced",
+    "provider": "Coursera",
+    "tags": ["Deep Learning", "Neural Networks", "Advanced AI"],
+    "link": "https://www.coursera.org/specializations/deep-learning"
+  },
+  {
+    "title": "Python for Everybody",
+    "category": "Programming",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Python", "Coding", "Programming"],
+    "link": "https://www.coursera.org/specializations/python"
+  },
+  {
+    "title": "Java Programming Masterclass",
+    "category": "Programming",
+    "level": "Intermediate",
+    "provider": "Udemy",
+    "tags": ["Java", "OOP", "Software"],
+    "link": "https://www.udemy.com/course/java-the-complete-java-developer-course/"
+  },
+  {
+    "title": "The Complete Web Developer Bootcamp",
+    "category": "Web Development",
+    "level": "Beginner",
+    "provider": "Udemy",
+    "tags": ["HTML", "CSS", "JavaScript"],
+    "link": "https://www.udemy.com/course/the-complete-web-development-bootcamp/"
+  },
+  {
+    "title": "Full Stack Open",
+    "category": "Web Development",
+    "level": "Intermediate",
+    "provider": "University of Helsinki",
+    "tags": ["React", "Node.js", "MongoDB"],
+    "link": "https://fullstackopen.com/en/"
+  },
+  {
+    "title": "CS50: Introduction to Computer Science",
+    "category": "Computer Science",
+    "level": "Beginner",
+    "provider": "edX",
+    "tags": ["CS Basics", "Harvard", "Intro"],
+    "link": "https://cs50.harvard.edu/x/"
+  },
+  {
+    "title": "Kotlin for Android Development",
+    "category": "Mobile Development",
+    "level": "Beginner",
+    "provider": "Udacity",
+    "tags": ["Android", "Kotlin", "App Dev"],
+    "link": "https://www.udacity.com/course/developing-android-apps-with-kotlin--ud9012"
+  },
+  {
+    "title": "iOS & Swift - Complete iOS App Development Bootcamp",
+    "category": "Mobile Development",
+    "level": "Intermediate",
+    "provider": "Udemy",
+    "tags": ["Swift", "iOS", "App Development"],
+    "link": "https://www.udemy.com/course/ios13-app-development-bootcamp/"
+  },
+  {
+    "title": "UI/UX Design Specialization",
+    "category": "Design",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Design", "Figma", "UX"],
+    "link": "https://www.coursera.org/specializations/ui-ux-design"
+  },
+  {
+    "title": "The Ultimate Drawing Course",
+    "category": "Design",
+    "level": "Beginner",
+    "provider": "Udemy",
+    "tags": ["Art", "Sketching", "Creativity"],
+    "link": "https://www.udemy.com/course/the-ultimate-drawing-course-beginner-to-advanced/"
+  },
+  {
+    "title": "Cloud Computing Basics",
+    "category": "Cloud",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Cloud", "AWS", "Azure"],
+    "link": "https://www.coursera.org/learn/cloud-computing-basics"
+  },
+  {
+    "title": "AWS Certified Cloud Practitioner",
+    "category": "Cloud",
+    "level": "Beginner",
+    "provider": "AWS",
+    "tags": ["AWS", "Certification", "Cloud"],
+    "link": "https://www.aws.training"
+  },
+  {
+    "title": "Intro to DevOps",
+    "category": "DevOps",
+    "level": "Intermediate",
+    "provider": "Coursera",
+    "tags": ["DevOps", "CI/CD", "Docker"],
+    "link": "https://www.coursera.org/learn/devops-culture-and-mindset"
+  },
+  {
+    "title": "Docker Mastery",
+    "category": "DevOps",
+    "level": "Intermediate",
+    "provider": "Udemy",
+    "tags": ["Docker", "Containers", "DevOps"],
+    "link": "https://www.udemy.com/course/docker-mastery/"
+  },
+  {
+    "title": "Introduction to Cyber Security",
+    "category": "Cybersecurity",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Cybersecurity", "Security", "Networks"],
+    "link": "https://www.coursera.org/learn/intro-cyber-security"
+  },
+  {
+    "title": "CompTIA Security+ Certification",
+    "category": "Cybersecurity",
+    "level": "Intermediate",
+    "provider": "Udemy",
+    "tags": ["Security+", "Networking", "Security"],
+    "link": "https://www.udemy.com/course/comptia-security-certification-sy0-501-the-total-course/"
+  },
+  {
+    "title": "Blockchain Basics",
+    "category": "Blockchain",
+    "level": "Beginner",
+    "provider": "edX",
+    "tags": ["Blockchain", "Web3", "Ethereum"],
+    "link": "https://www.edx.org/course/blockchain-basics"
+  },
+  {
+    "title": "Solidity and Smart Contracts",
+    "category": "Blockchain",
+    "level": "Intermediate",
+    "provider": "Udemy",
+    "tags": ["Solidity", "Ethereum", "Web3"],
+    "link": "https://www.udemy.com/course/ethereum-and-solidity-the-complete-developers-guide/"
+  },
+  {
+    "title": "Excel Skills for Business",
+    "category": "Business",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Excel", "Business Tools"],
+    "link": "https://www.coursera.org/learn/excel"
+  },
+  {
+    "title": "Financial Markets",
+    "category": "Finance",
+    "level": "Intermediate",
+    "provider": "Coursera",
+    "tags": ["Finance", "Economics"],
+    "link": "https://www.coursera.org/learn/financial-markets-global"
+  },
+  {
+    "title": "Digital Marketing Specialization",
+    "category": "Marketing",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Marketing", "SEO", "Google Ads"],
+    "link": "https://www.coursera.org/specializations/digital-marketing"
+  },
+  {
+    "title": "Public Speaking Mastery",
+    "category": "Soft Skills",
+    "level": "Beginner",
+    "provider": "Udemy",
+    "tags": ["Communication", "Confidence", "Speaking"],
+    "link": "https://www.udemy.com/course/public-speaking/"
+  },
+  {
+    "title": "Career Success Specialization",
+    "category": "Career",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Career", "Planning", "Productivity"],
+    "link": "https://www.coursera.org/specializations/career-success"
+  },
+  {
+    "title": "Getting Started with Git and GitHub",
+    "category": "Software Tools",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Git", "GitHub", "Version Control"],
+    "link": "https://www.coursera.org/learn/introduction-git-github"
+  },
+  {
+    "title": "Linux Command Line Basics",
+    "category": "Operating Systems",
+    "level": "Beginner",
+    "provider": "Coursera",
+    "tags": ["Linux", "Terminal", "Shell"],
+    "link": "https://www.coursera.org/learn/linux-command-line"
+  },
+  {
+    "title": "SQL for Data Analysis",
+    "category": "Data Science",
+    "level": "Beginner",
+    "provider": "Udacity",
+    "tags": ["SQL", "Databases", "Data"],
+    "link": "https://www.udacity.com/course/sql-for-data-analysis--ud198"
+  },
+  {
+    "title": "Applied Data Science with Python",
+    "category": "Data Science",
+    "level": "Intermediate",
+    "provider": "Coursera",
+    "tags": ["Python", "Pandas", "Analysis"],
+    "link": "https://www.coursera.org/specializations/data-science-python"
+  }
+]
