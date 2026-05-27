@@ -37,7 +37,6 @@ services:
   - type: web
     name: course-bot-frontend
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
