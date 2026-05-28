@@ -64,6 +64,15 @@ copy ..\.env.example .env
 python run.py
 ```
 
+Optional ChromaDB vector store:
+
+```bash
+cd backend
+pip install -r requirements-vector.txt
+```
+
+Embedding warm-up is disabled by default. Set `PRECOMPUTE_EMBEDDINGS=true` only when your OpenAI quota is available and you intentionally want to precompute course vectors at startup.
+
 Frontend:
 
 ```bash

@@ -21,6 +21,12 @@ services:
         value: false
       - key: DATABASE_URL
         value: sqlite:///recommender.db
+      - key: CORS_ORIGINS
+        value: https://course-bot-frontend.onrender.com
+      - key: CHROMA_ENABLED
+        value: false
+      - key: PRECOMPUTE_EMBEDDINGS
+        value: false
       - key: SECRET_KEY
         generateValue: true
       - key: JWT_SECRET_KEY

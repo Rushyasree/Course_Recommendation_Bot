@@ -13,9 +13,10 @@ logger = logging.getLogger(__name__)
 app = create_app()
 
 if __name__ == '__main__':
-    # Precompute course embeddings in batch for faster semantic queries
-    from backend.app.services.recommendation_service import precompute_all_course_embeddings
-    precompute_all_course_embeddings(app)
+    if os.getenv("PRECOMPUTE_EMBEDDINGS", "false").lower() in ("true", "1", "yes"):
+        # Optional warm-up step. Keep disabled by default to avoid slow starts and quota burn.
+        from backend.app.services.recommendation_service import precompute_all_course_embeddings
+        precompute_all_course_embeddings(app)
     
     port = app.config.get("PORT", 5000)
     debug = app.config.get("DEBUG", True)

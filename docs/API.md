@@ -2,6 +2,8 @@
 
 Base URL: `/api`
 
+Vector search note: the main app runs without ChromaDB. Install `backend/requirements-vector.txt` and set `CHROMA_ENABLED=true` only on environments that support Chroma's native dependency chain.
+
 ## Health
 
 ### `GET /health`
