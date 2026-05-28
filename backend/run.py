@@ -13,9 +13,6 @@ logger = logging.getLogger(__name__)
 app = create_app()
 
 if __name__ == '__main__':
-    # Auto-seed database with course catalog
-    seed_database(app)
-    
     # Precompute course embeddings in batch for faster semantic queries
     from backend.app.services.recommendation_service import precompute_all_course_embeddings
     precompute_all_course_embeddings(app)

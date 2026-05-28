@@ -101,3 +101,49 @@ class SavedRecommendation(db.Model):
             "course": self.course.to_dict() if self.course else None,
             "timestamp": self.timestamp.isoformat()
         }
+
+
+class RoadmapProgress(db.Model):
+    __tablename__ = 'roadmap_progress'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    skill = db.Column(db.String(120), nullable=False)
+    stage = db.Column(db.String(50), default="Beginner")
+    progress = db.Column(db.Integer, default=0)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AnalyticsSnapshot(db.Model):
+    __tablename__ = 'analytics'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    career_readiness_score = db.Column(db.Integer, default=0)
+    roadmap_completion = db.Column(db.Integer, default=0)
+    payload = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class UploadedResume(db.Model):
+    __tablename__ = 'uploaded_resumes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    filename = db.Column(db.String(255), nullable=False)
+    target_role = db.Column(db.String(120), nullable=False)
+    extracted_skills = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class RecommendationFeedback(db.Model):
+    __tablename__ = 'recommendation_feedback'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id', ondelete='CASCADE'), nullable=False)
+    rating = db.Column(db.Integer, nullable=True)
+    feedback = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    course = db.relationship('Course', backref='feedback')

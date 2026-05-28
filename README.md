@@ -1,200 +1,165 @@
-# ElevateAI – Intelligent Course Recommender & Career Guidance Platform
+# ElevateAI
 
-ElevateAI is a production-grade, fault-tolerant AI-powered career counseling and learning path recommendation platform. Built for scalability and visual excellence, the application features an advanced hybrid AI recommendation engine (Semantic Search + Cosine RAG), dynamic roadmap generation based on skill gaps, automated PDF resume parsing, interactive SVG radar analytics, and a multi-model resilient AI fallback chain with circuit breakers.
+ElevateAI is an AI-powered course recommendation and career guidance platform for students, freshers, and career switchers. It combines a conversational assistant, resume-based skill-gap analysis, grounded course recommendations, roadmap generation, saved courses, and analytics in a modern React + Flask application.
 
----
+## What It Demonstrates
 
-## 🚀 Key Architectural Features
+- Full-stack SaaS architecture with React, Flask, SQLAlchemy, JWT auth, and Docker-ready deployment.
+- Hybrid recommendation flow using semantic embeddings when available, cosine similarity, TF-IDF fallback, and grounded LLM explanations.
+- Resume parsing with role-based skill-gap analysis and dynamic analytics.
+- Production-minded safeguards: environment-based secrets, scoped CORS, request rate limiting, safe toast rendering, health checks, and CI.
+- Recruiter-friendly UI with a premium dark dashboard, responsive layout, charts, roadmap, and course cards.
 
-### 1. Hybrid AI Recommendation Engine
-Replaces simple keyword lookups with a dual-scoring pipeline:
-* **Semantic Grounding**: Embeds course catalogs in-database using OpenAI `text-embedding-3-small` vectors.
-* **Intelligent RAG Context**: Feeds matching courses into a tailored prompt context, ensuring hallucination-free career guidance and verified enrollment links.
-* **Offline Cosine Similarity**: Employs mathematical cosine calculations via `scikit-learn` in the backend database layers.
-
-### 2. Robust Multi-Provider AI Fallback Chain
-Designed for zero-downtime resilience, ElevateAI automatically intercepts API outages, rate limits, or quota errors, automatically falling back down the provider chain:
+## Architecture
 
 ```mermaid
-graph TD
-    A[🧑 User Request] --> B[🔀 Central AI Router]
-    B -->|Priority 1| C[🤖 OpenAI GPT-4o-mini]
-    C -->|Failure / Circuit Open| D[✨ Google Gemini 1.5 Flash]
-    D -->|Failure / Circuit Open| E[🎭 Anthropic Claude Sonnet]
-    E -->|Failure / Circuit Open| F[📊 Local TF-IDF Engine]
-    C -->|Success| G[✨ Process Response]
-    D -->|Success| G
-    E -->|Success| G
-    F -->|Success| G
-    G --> H[🧹 Tag Sanitizer]
-    H --> I[💻 Premium Frontend Glass UI]
+flowchart LR
+  User["Learner"] --> UI["React + Tailwind SaaS UI"]
+  UI --> API["Flask REST API"]
+  API --> Auth["JWT Auth"]
+  API --> Resume["Resume Parser + Skill Gap"]
+  API --> Rec["Hybrid Recommendation Service"]
+  Rec --> Embed["OpenAI Embeddings"]
+  Rec --> TFIDF["TF-IDF Offline Fallback"]
+  Rec --> LLM["OpenAI / Gemini / Claude Router"]
+  API --> DB["SQLAlchemy DB: SQLite dev, PostgreSQL-ready"]
+  DB --> Courses["Courses, Users, Chat, Analytics, Roadmap, Feedback"]
 ```
 
-* **Circuit Breakers**: Activates automatically per provider after 3 consecutive failures, opening a 60-second cooling-off period.
-* **Exponential Backoff**: Dynamically retries failed API calls with escalating sleep intervals ($0.5s \times 2^{attempt}$).
+## Core Features
 
-### 3. Dynamic Timeline & Skill Gap Parser
-* **PDF Resume Upload**: Extracts raw technical terms from uploaded PDF profiles using python `pypdf`.
-* **Skill-Gap Analysis**: Compares parsed competencies against target role requirements (e.g., *DevOps Engineer*, *Data Scientist*).
-* **Live Learning Roadmap**: Auto-generates a multi-stage (Beginner → Intermediate → Advanced) dynamic timeline mapping missing skills directly to specific database courses.
+- AI chat assistant for career guidance and course discovery.
+- Structured course cards with match score, rationale, and verified links.
+- Resume PDF upload with extracted skills, missing skills, target-role comparison, and career insights.
+- Analytics dashboard with radar chart, readiness score, learning trend, and completed/pending skill metrics.
+- Personalized roadmap timeline based on skill gaps.
+- Authentication, profile sync, saved courses, and anonymous session support.
+- Multi-provider AI fallback chain with local graceful degradation.
 
----
+## Tech Stack
 
-## 📂 System Folder Structure
+Frontend:
+- React 18, Vite, TailwindCSS, Framer Motion, Chart.js, Lucide icons, ReactMarkdown.
 
-```text
-course-recommendation-bot/
-├── backend/
-│   ├── app/
-│   │   ├── models/
-│   │   │   └── models.py            # SQLite/PostgreSQL-ready SQLAlchemy Schemas
-│   │   ├── routes/
-│   │   │   ├── auth.py              # JWT Authentication & Profile Routes
-│   │   │   ├── chat.py              # Conversational State-Machine Blueprint
-│   │   │   ├── courses.py           # Catalog Search & Saved Bookmark Routes
-│   │   │   ├── resume.py            # PDF Resume Parser & Gap Classifier
-│   │   │   ├── roadmap.py           # Dynamic Upskilling Timeline Generator
-│   │   │   └── stats.py             # Competency Index & Radar Coordinate Metrics
-│   │   ├── services/
-│   │   │   ├── ai_router.py         # Central Provider Chain & Circuit Breakers
-│   │   │   ├── openai_service.py    # OpenAI Embedding & Chat Completion
-│   │   │   ├── gemini_service.py    # Gemini 1.5 Flash REST Implementation
-│   │   │   ├── claude_service.py    # Claude-3 Sonnet REST Integration
-│   │   │   ├── tfidf_service.py     # Offline Local TF-IDF Fallback Service
-│   │   │   ├── recommendation.py    # Cosine Similarity Vector Database Search
-│   │   │   └── resume_service.py    # PDF Extraction & Target Role Standards
-│   │   ├── utils/
-│   │   │   ├── sanitize.py          # AI Metadata Tag Strip Utilities
-│   │   │   └── seed.py              # Course Catalog Seed Database Routine
-│   │   ├── config.py                # Environment Config Loader
-│   │   └── __init__.py              # Flask App Factory & Blueprint Registration
-│   ├── courses.json                 # Core Seed Catalog with 30+ Premium Courses
-│   ├── Dockerfile                   # Production Backend Dockerfile (Gunicorn-based)
-│   ├── requirements.txt             # Python Package Dependencies
-│   └── run.py                       # Application Entry Point
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── Toast.jsx            # Framer Motion Notification Banner
-│   │   ├── App.jsx                  # Single Page SaaS Dashboard Layout
-│   │   ├── index.css                # CSS Global Design Tokens
-│   │   └── index.jsx                # DOM Mounting Entry point
-│   ├── nginx.conf                   # Reverse Proxy Config (Docker/VPS routing)
-│   ├── package.json                 # NPM Modules & Scripts
-│   ├── vite.config.js               # Vite Configurations
-│   └── Dockerfile                   # High-performance Static Serving Dockerfile
-├── render.yaml                      # Render.com Blueprint (Infrastructure-as-Code)
-└── docker-compose.yml               # Multi-container local execution layout
+Backend:
+- Flask, SQLAlchemy, Flask-JWT-Extended, Flask-CORS, scikit-learn, pypdf, OpenAI SDK, requests.
+
+DevOps:
+- Docker, Docker Compose, Nginx, Render blueprint, GitHub Actions CI.
+
+Database:
+- SQLite for local development.
+- PostgreSQL-ready SQLAlchemy architecture with Alembic included for migrations.
+
+## Local Setup
+
+Backend:
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+copy ..\.env.example .env
+python run.py
 ```
 
----
+Frontend:
 
-## 🛠️ Step-by-Step Local Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-### Backend (Python 3.10)
-1. Navigate to the backend folder and initialize a virtual environment:
-   ```bash
-   cd backend
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-2. Install production dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Copy environment configuration and supply your keys:
-   ```bash
-   cp ../.env.example .env
-   ```
-4. Run the development server (auto-seeds the course database):
-   ```bash
-   python run.py
-   ```
-   *Backend will run at:* `http://localhost:5000`
+Default URLs:
 
-### Frontend (React + Vite)
-1. Navigate to the frontend directory:
-   ```bash
-   cd ../frontend
-   ```
-2. Install npm modules:
-   ```bash
-   npm install
-   ```
-3. Boot the development hot-reloader:
-   ```bash
-   npm run dev
-   ```
-   *Frontend will run at:* `http://localhost:3000`
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:5000/api/health`
 
----
+## Environment Variables
 
-## ⚡ Core REST API Endpoints
+Copy `.env.example` to `.env` and configure:
 
-### 💬 Chatbot Service
-* **POST** `/api/chat`
-  * **Payload**: `{"message": "Hello", "user_id": "anon-session-123"}`
-  * **Response**: `{"reply": "Nice to meet you...", "stage": "ask_interest", "model": "openai"}`
+```env
+SECRET_KEY=replace-with-random-secret
+JWT_SECRET_KEY=replace-with-random-jwt-secret
+FLASK_DEBUG=false
+CORS_ORIGINS=http://localhost:3000
+DATABASE_URL=sqlite:///recommender.db
+OPENAI_API_KEY=
+GEMINI_API_KEY=
+ANTHROPIC_API_KEY=
+```
 
-### 📊 Skill GAP & Competency Analytics
-* **GET** `/api/stats/dashboard`
-  * **Query Parameters**: `?user_id=anon-session-123` (or via Bearer Auth Header)
-  * **Response**:
-    ```json
-    {
-      "target_role": "Backend Developer",
-      "completion_rate": 45,
-      "matched_skills": ["python", "sql", "git"],
-      "missing_skills": ["node.js", "docker", "mongodb"],
-      "radar_coordinates": {
-        "programming": 80,
-        "data_science": 50,
-        "cloud": 40,
-        "cybersecurity": 30
-      }
-    }
-    ```
+In production, never use default secrets and never commit `.env`.
 
-### 🗺️ Dynamic Career Timelines
-* **GET** `/api/roadmap/timeline`
-  * **Query Parameters**: `?user_id=anon-session-123`
-  * **Response**:
-    ```json
-    {
-      "steps": [
-        {
-          "skill": "mongodb",
-          "required": true,
-          "course": {
-            "title": "Full Stack Open (React, Node, Express, MongoDB)",
-            "provider": "University of Helsinki",
-            "link": "https://fullstackopen.com/en/",
-            "level": "Intermediate"
-          }
-        }
-      ]
-    }
-    ```
+## API Summary
 
-### 📂 Resume PDF Upload Scanner
-* **POST** `/api/resume/upload`
-  * **Payload**: Multipart form-data containing `"file"` (PDF) and `"target_role"`.
-  * **Response**: Performs OCR-style parsing, updates user database, and returns live gap data.
+- `POST /api/chat` - conversational recommendation flow.
+- `POST /api/auth/register` - create account.
+- `POST /api/auth/login` - get JWT.
+- `GET /api/auth/profile` - authenticated profile.
+- `POST /api/resume/upload` - parse PDF and return skill-gap analysis.
+- `GET /api/stats/dashboard` - analytics metrics.
+- `GET /api/roadmap/timeline` - personalized roadmap.
+- `POST /api/courses/save` - save a course.
+- `GET /api/courses/saved` - saved learning queue.
+- `GET /api/courses` - filterable course catalog.
+- `POST /api/courses/feedback` - collect recommendation feedback for future personalization.
+- `GET /api/courses/personalization` - summarize saved, rated, and progress signals.
+- `POST /api/roadmap/progress` - update roadmap progress.
+- `GET /api/health` - service and AI-provider health.
 
----
+Detailed API examples are available in `docs/API.md`.
 
-## 💼 Placement & Resume-Ready Project Description
+## Testing And Quality
 
-Copy and paste this professional description directly into your resume or portfolio site:
+```bash
+cd backend
+pytest -q
+flask --app run.py seed
+flask --app run.py precompute-embeddings
 
-> ### **ElevateAI – Fault-Tolerant AI Career guidance & Learning Platform**
-> * **Backend Stack**: Python, Flask, SQLAlchemy ORM, Gunicorn, SQLite/PostgreSQL, SciKit-Learn (Cosine Similarity Vector Search).
-> * **Frontend Stack**: React 18, Vite, TailwindCSS, Framer Motion, Chart.js, Lucide Icons.
-> * **AI Infrastructure**: OpenAI Embedding (`text-embedding-3-small`), Google Gemini 1.5 Flash, Anthropic Claude, TF-IDF Search.
-> * **DevOps**: Docker, Docker Compose, Render.com Blueprints (IaC), Nginx Reverse Proxy.
->
-> **Key Contributions**:
-> * **Resilient AI Orchestration**: Architected a production-ready central AI router with automatic circuit breakers and exponential backoff, falling back across OpenAI, Gemini, and Claude API providers to ensure zero-downtime conversational recommendations.
-> * **Hybrid Recommendation Engine**: Engineered a vector retrieval pipeline calculating cosine similarity between SQLite-stored course catalogs and user skill profiles, boosting relevance matches by **45%** compared to traditional SQL queries.
-> * **SaaS Dashboard & Analytics**: Crafted a premium dark-themed glassmorphism panel with Framer Motion, utilizing dynamic SVG coordinates to draw a real-time reactive radar competency graph from parsed skill indices.
-> * **Automated Resume Profiler**: Developed a PDF parsing service using `pypdf` that extracts technical keywords, maps user profile gaps to target professional roles, and outputs a dynamic multi-stage roadmap linking directly to database courses.
+cd frontend
+npm run build
+```
+
+CI runs backend compilation, backend tests, and frontend production build.
+
+## Deployment
+
+Render:
+- Use `render.yaml`.
+- Set production environment variables in the Render dashboard.
+- Prefer PostgreSQL for deployed persistence.
+
+Vercel + Render:
+- Deploy frontend to Vercel.
+- Deploy Flask API to Render.
+- Set `VITE_API_URL` to the backend `/api` URL.
+- Configure `CORS_ORIGINS` with the Vercel domain.
+
+Docker:
+
+```bash
+docker compose up --build
+```
+
+## Resume Description
+
+ElevateAI - AI Career Guidance and Course Recommendation Platform
+
+- Built a full-stack AI SaaS platform using React, Flask, SQLAlchemy, JWT, Docker, and Nginx.
+- Implemented hybrid recommendation with semantic embeddings, cosine similarity, TF-IDF fallback, and grounded LLM explanations.
+- Developed resume parsing and skill-gap analysis to generate personalized learning paths and readiness analytics.
+- Designed a responsive dashboard with charts, roadmap visualization, saved courses, and AI chat workflow.
+- Added production safeguards including scoped CORS, environment-based secrets, rate limiting, CI, health checks, and safe frontend rendering.
+
+## Future Scope
+
+- Add PostgreSQL + pgvector or ChromaDB for persistent nearest-neighbor vector search.
+- Add collaborative filtering from saves, ratings, completions, and feedback.
+- Add admin course management and course-quality scoring.
+- Add certification tracking, progress history, weekly learning goals, and notifications.
+- Add multilingual support and voice input for accessibility.

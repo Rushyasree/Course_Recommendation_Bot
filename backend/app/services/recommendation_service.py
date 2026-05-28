@@ -5,6 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from backend.app.models.models import db, Course
 from backend.app.services.openai_service import get_openai_client
+from backend.app.services.vector_store import query_course_ids, upsert_course_embedding
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,14 @@ def semantic_recommendations(query, level, limit=3):
         return local_tfidf_recommendations(query, level, limit)
 
     try:
+        chroma_ids = query_course_ids(query_embedding, level=level, limit=limit)
+        if chroma_ids:
+            courses_by_id = {course.id: course for course in Course.query.filter(Course.id.in_(chroma_ids)).all()}
+            ranked = [courses_by_id[course_id] for course_id in chroma_ids if course_id in courses_by_id]
+            if ranked:
+                logger.info(f"Semantic match served from ChromaDB with {len(ranked)} results.")
+                return ranked
+
         # Fetch courses filtered by level
         courses = Course.query.filter_by(level=level).all()
         if not courses:
@@ -124,6 +133,7 @@ def semantic_recommendations(query, level, limit=3):
                 c_emb = generate_openai_embedding(doc)
                 if c_emb:
                     course.set_embedding(c_emb)
+                    upsert_course_embedding(course, c_emb)
                     db.session.add(course)
                     db.session.commit()
             
@@ -162,8 +172,11 @@ def precompute_all_course_embeddings(app):
                 emb = generate_openai_embedding(doc)
                 if emb:
                     c.set_embedding(emb)
+                    upsert_course_embedding(c, emb)
                     db.session.add(c)
                     updated_count += 1
+            else:
+                upsert_course_embedding(c, c.get_embedding())
         
         if updated_count > 0:
             db.session.commit()

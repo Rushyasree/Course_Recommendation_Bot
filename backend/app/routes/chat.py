@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from backend.app.models.models import db, User, Course, ChatHistory
 from backend.app.services.ai_router import get_ai_response
 from backend.app.utils.sanitize import sanitize_text
@@ -15,13 +16,23 @@ def chat():
         user_id = data.get('user_id')
         message = sanitize_text(data.get('message', '').strip())
 
-        if not user_id:
+        authenticated_user_id = None
+        try:
+            verify_jwt_in_request(optional=True)
+            authenticated_user_id = get_jwt_identity()
+        except Exception:
+            authenticated_user_id = None
+
+        if not user_id and not authenticated_user_id:
             return jsonify({"reply": "User ID/Session ID required."}), 400
 
         user_input = message.lower()
 
         # Step 1: Find or create session user in SQLite
-        user = User.query.filter((User.session_id == user_id) | (User.username == user_id)).first()
+        if authenticated_user_id:
+            user = User.query.get(int(authenticated_user_id))
+        else:
+            user = User.query.filter((User.session_id == user_id) | (User.username == user_id)).first()
         if not user:
             user = User(session_id=user_id)
             db.session.add(user)
@@ -39,6 +50,7 @@ def chat():
         reply = ""
         next_stage = current_stage
         model_used = "default"
+        structured_courses = []
 
         # Handle exit flow
         if user_input == "exit":
@@ -70,10 +82,23 @@ def chat():
             result = get_ai_response(user_interest, level, retrieved_courses=matched_courses if matched_courses else None)
             reply = result['reply']
             model_used = result.get('model')
+            structured_courses = [
+                {
+                    **course.to_dict(),
+                    "match_score": round(max(0.55, 0.95 - (idx * 0.08)), 2),
+                    "why_recommended": f"Aligned with {user_interest} at {level} level using semantic catalog retrieval.",
+                    "career_alignment": user_interest.title(),
+                    "missing_skills": []
+                }
+                for idx, course in enumerate(matched_courses or [])
+            ]
             # Append follow-up prompt
             reply += "\n\nWould you like another recommendation? Enter another interest or type 'exit' to end."
-
         else:
+            reply = "I'm here to help you find the best courses! What are you interested in learning?"
+            next_stage = "ask_interest"
+
+        if not reply:
             reply = "I'm here to help you find the best courses! What are you interested in learning?"
             next_stage = "ask_interest"
 
@@ -82,7 +107,7 @@ def chat():
         db.session.add(bot_msg)
         db.session.commit()
 
-        return jsonify({"reply": reply, "stage": next_stage, "model": model_used})
+        return jsonify({"reply": reply, "stage": next_stage, "model": model_used, "courses": structured_courses})
 
     except Exception as e:
         logger.error(f"Error handling chat request: {str(e)}")

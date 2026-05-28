@@ -19,10 +19,20 @@ ROLE_REQUIRED_SKILLS = {
     "frontend developer": {"javascript", "react", "html", "css", "git", "github", "figma", "ux", "design"},
     "data scientist": {"python", "sql", "databases", "machine learning", "ml", "deep learning", "neural networks", "excel"},
     "backend developer": {"python", "javascript", "node.js", "mongodb", "sql", "databases", "java", "git"},
+    "full stack developer": {"javascript", "react", "node.js", "mongodb", "sql", "html", "css", "git", "docker"},
+    "ai engineer": {"python", "machine learning", "ml", "deep learning", "neural networks", "sql", "cloud", "docker"},
+    "cloud engineer": {"docker", "containers", "devops", "ci/cd", "aws", "cloud", "linux", "terminal", "kubernetes"},
     "mobile developer": {"android", "kotlin", "swift", "ios", "git"},
     "devops engineer": {"docker", "containers", "devops", "ci/cd", "aws", "cloud", "linux", "terminal", "git"},
     "cybersecurity analyst": {"cybersecurity", "security", "networks", "linux", "terminal"},
     "blockchain developer": {"blockchain", "solidity", "ethereum", "web3", "git", "github", "javascript"}
+}
+
+SKILL_DOMAINS = {
+    "programming": {"python", "javascript", "java", "html", "css", "react", "node.js", "git", "github"},
+    "data_science": {"python", "sql", "databases", "machine learning", "ml", "deep learning", "neural networks", "excel"},
+    "cloud": {"docker", "containers", "devops", "ci/cd", "aws", "cloud", "azure", "kubernetes", "linux", "terminal"},
+    "cybersecurity": {"cybersecurity", "security", "networks", "linux", "terminal"},
 }
 
 def extract_text_from_pdf(file_stream):
@@ -78,10 +88,23 @@ def analyze_skill_gaps(user_skills, target_role):
 
     missing_skills = list(required - user_skills_set)
     matched_skills = list(required & user_skills_set)
+    radar_coordinates = build_radar_coordinates(user_skills_set)
 
     return {
         "target_role": matched_role.title(),
         "matched_skills": matched_skills,
         "missing_skills": missing_skills,
-        "completion_rate": int((len(matched_skills) / len(required)) * 100) if required else 100
+        "completion_rate": int((len(matched_skills) / len(required)) * 100) if required else 100,
+        "radar_coordinates": radar_coordinates
     }
+
+def build_radar_coordinates(user_skills):
+    """Build stable dashboard radar metrics from normalized skills."""
+    coordinates = {}
+    for domain, domain_skills in SKILL_DOMAINS.items():
+        if not domain_skills:
+            coordinates[domain] = 0
+            continue
+        matched = domain_skills & user_skills
+        coordinates[domain] = min(100, int((len(matched) / len(domain_skills)) * 100))
+    return coordinates

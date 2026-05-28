@@ -89,7 +89,21 @@ def upload_resume():
 
         return jsonify({
             "analysis": gap_analysis,
-            "recommended_courses": recommended_courses
+            "recommended_courses": [
+                {
+                    **course,
+                    "match_score": round(max(0.58, 0.96 - (idx * 0.07)), 2),
+                    "why_recommended": "Targets a missing skill from your resume skill-gap analysis.",
+                    "career_alignment": gap_analysis["target_role"],
+                    "missing_skills": missing_skills[:3]
+                }
+                for idx, course in enumerate(recommended_courses)
+            ],
+            "career_insights": {
+                "summary": f"You are {gap_analysis['completion_rate']}% aligned with {gap_analysis['target_role']}.",
+                "estimated_learning_duration": f"{max(4, len(missing_skills) * 2)}-{max(6, len(missing_skills) * 3)} weeks",
+                "next_best_action": missing_skills[0] if missing_skills else "Build a portfolio project and apply for roles."
+            }
         }), 200
 
     except Exception as e:

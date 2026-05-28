@@ -22,9 +22,11 @@ def create_app(config_class=Config):
     logger = logging.getLogger(__name__)
 
     # Initialize extensions
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", [])}})
     db.init_app(app)
     jwt.init_app(app)
+    from backend.app.middleware.rate_limit import register_rate_limiter
+    register_rate_limiter(app)
 
     # Register blueprints (routes)
     from backend.app.routes.chat import chat_bp
@@ -73,6 +75,25 @@ def create_app(config_class=Config):
     # Ensure database tables exist
     with app.app_context():
         db.create_all()
+        try:
+            from backend.app.utils.seed import seed_database
+            seed_database(app)
+        except Exception as exc:
+            logger.error(f"Database seed step failed: {exc}")
         logger.info("Database initialized successfully.")
+
+    @app.cli.command("seed")
+    def seed_command():
+        """Seed the course catalog from courses.json."""
+        from backend.app.utils.seed import seed_database
+        seed_database(app)
+        logger.info("Seed command completed.")
+
+    @app.cli.command("precompute-embeddings")
+    def precompute_embeddings_command():
+        """Precompute course embeddings and optionally sync ChromaDB."""
+        from backend.app.services.recommendation_service import precompute_all_course_embeddings
+        precompute_all_course_embeddings(app)
+        logger.info("Embedding precompute command completed.")
 
     return app

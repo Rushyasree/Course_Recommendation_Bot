@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from backend.app.services.resume_service import ROLE_REQUIRED_SKILLS, analyze_skill_gaps
-from backend.app.models.models import User, Course
+from backend.app.models.models import db, User, Course, RoadmapProgress
+from backend.app.utils.validation import optional_string, require_int, require_string
 import logging
 
 roadmap_bp = Blueprint('roadmap', __name__)
@@ -15,7 +16,7 @@ def get_user_from_request():
             return User.query.get(int(user_id))
     except Exception:
         pass
-    session_id = request.args.get('user_id')
+    session_id = request.args.get('user_id') or (request.json or {}).get('user_id')
     if session_id:
         return User.query.filter((User.session_id == session_id) | (User.username == session_id)).first()
     return None
@@ -56,3 +57,37 @@ def get_roadmap():
     except Exception as e:
         logger.error(f"Error generating roadmap: {str(e)}")
         return jsonify({"error": "Server Error", "message": "Could not generate roadmap."}), 500
+
+
+@roadmap_bp.route('/progress', methods=['POST'])
+def update_progress():
+    try:
+        user = get_user_from_request()
+        if not user:
+            return jsonify({"error": "Unauthorized", "message": "User session or token required."}), 401
+
+        data = request.json or {}
+        skill = require_string(data, 'skill', min_length=1, max_length=120).lower()
+        progress = require_int(data, 'progress', minimum=0, maximum=100)
+        stage = optional_string(data, 'stage', max_length=50, default="Beginner")
+
+        item = RoadmapProgress.query.filter_by(user_id=user.id, skill=skill).first()
+        if not item:
+            item = RoadmapProgress(user_id=user.id, skill=skill)
+
+        item.progress = progress
+        item.stage = stage
+        db.session.add(item)
+        db.session.commit()
+
+        return jsonify({
+            "skill": item.skill,
+            "stage": item.stage,
+            "progress": item.progress,
+            "updated_at": item.updated_at.isoformat()
+        }), 200
+    except Exception as e:
+        if isinstance(e, ValueError):
+            return jsonify({"error": "Bad Request", "message": str(e)}), 400
+        logger.error(f"Error updating roadmap progress: {str(e)}")
+        return jsonify({"error": "Server Error", "message": "Could not update roadmap progress."}), 500

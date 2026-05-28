@@ -29,6 +29,11 @@ jobs:
           cd backend
           python -m py_compile run.py app/config.py app/__init__.py app/models/models.py
 
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          pytest -q
+
   frontend-build:
     runs-on: ubuntu-latest
     steps:

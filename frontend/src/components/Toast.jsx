@@ -39,7 +39,7 @@ export default function Toast({ message, type = "info", duration = 5000, onDismi
           className="fixed top-4 right-4 z-50 max-w-xs w-full bg-black/70 backdrop-blur-sm rounded-xl border border-white/10 shadow-xl flex items-center gap-3 p-4 text-white"
         >
           <Icon className="w-5 h-5 flex-shrink-0" />
-          <div className="flex-1 text-sm leading-snug" dangerouslySetInnerHTML={{ __html: message }} />
+          <div className="flex-1 text-sm leading-snug">{message}</div>
           <button
             onClick={onDismiss}
             className="p-1 rounded-full hover:bg-white/10 focus:outline-none"

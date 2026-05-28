@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from backend.app.models.models import db, User
+from backend.app.utils.validation import optional_string, require_string
 import logging
 
 auth_bp = Blueprint('auth', __name__)
@@ -11,12 +12,12 @@ logger = logging.getLogger(__name__)
 def register():
     try:
         data = request.json or {}
-        username = data.get('username')
-        password = data.get('password')
-        name = data.get('name', '')
+        username = require_string(data, 'username', min_length=3, max_length=80).lower()
+        password = require_string(data, 'password', min_length=6, max_length=128)
+        name = optional_string(data, 'name', max_length=100)
 
-        if not username or not password:
-            return jsonify({"error": "Bad Request", "message": "Username and password are required fields."}), 400
+        if not username.replace("_", "").replace(".", "").isalnum():
+            return jsonify({"error": "Bad Request", "message": "Username can only contain letters, numbers, underscores, and dots."}), 400
 
         # Check for existing user
         existing_user = User.query.filter_by(username=username).first()
@@ -37,6 +38,8 @@ def register():
         return jsonify({"message": "User registered successfully."}), 201
 
     except Exception as e:
+        if isinstance(e, ValueError):
+            return jsonify({"error": "Bad Request", "message": str(e)}), 400
         logger.error(f"Error during user registration: {str(e)}")
         return jsonify({"error": "Server Error", "message": "An unexpected error occurred. Please try again."}), 500
 
@@ -45,11 +48,8 @@ def register():
 def login():
     try:
         data = request.json or {}
-        username = data.get('username')
-        password = data.get('password')
-
-        if not username or not password:
-            return jsonify({"error": "Bad Request", "message": "Username and password are required fields."}), 400
+        username = require_string(data, 'username', min_length=3, max_length=80).lower()
+        password = require_string(data, 'password', min_length=1, max_length=128)
 
         user = User.query.filter_by(username=username).first()
         if not user or not check_password_hash(user.password_hash, password):
@@ -66,6 +66,8 @@ def login():
         }), 200
 
     except Exception as e:
+        if isinstance(e, ValueError):
+            return jsonify({"error": "Bad Request", "message": str(e)}), 400
         logger.error(f"Error during user login: {str(e)}")
         return jsonify({"error": "Server Error", "message": "An unexpected error occurred. Please try again."}), 500
 
@@ -99,16 +101,18 @@ def update_profile():
 
         data = request.json or {}
         if 'name' in data:
-            user.name = data['name']
+            user.name = optional_string(data, 'name', max_length=100)
         if 'interests' in data:
-            user.interests = data['interests'].lower()
+            user.interests = optional_string(data, 'interests', max_length=500).lower()
         if 'target_role' in data:
-            user.target_role = data['target_role']
+            user.target_role = optional_string(data, 'target_role', max_length=100)
 
         db.session.commit()
         logger.info(f"Updated profile details for user ID: {user_id}")
         return jsonify(user.to_dict()), 200
 
     except Exception as e:
+        if isinstance(e, ValueError):
+            return jsonify({"error": "Bad Request", "message": str(e)}), 400
         logger.error(f"Error updating user profile: {str(e)}")
         return jsonify({"error": "Server Error", "message": "An unexpected error occurred."}), 500
