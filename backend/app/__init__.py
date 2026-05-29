@@ -1,9 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from backend.app.config import Config
 from backend.app.models.models import db
 import logging
+import os
 
 jwt = JWTManager()
 
@@ -53,6 +54,27 @@ def create_app(config_class=Config):
             'status': 'healthy',
             'providers': get_provider_health()
         })
+
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    frontend_dist = os.path.join(repo_root, "frontend", "dist")
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path):
+        if path.startswith("api/"):
+            return jsonify({"error": "Not Found", "message": "The requested API route does not exist."}), 404
+
+        requested_file = os.path.join(frontend_dist, path)
+        if path and os.path.exists(requested_file) and os.path.isfile(requested_file):
+            return send_from_directory(frontend_dist, path)
+
+        if os.path.exists(os.path.join(frontend_dist, "index.html")):
+            return send_from_directory(frontend_dist, "index.html")
+
+        return jsonify({
+            "status": "frontend_not_built",
+            "message": "Run `npm --prefix frontend run build` before using single-service mode."
+        }), 503
 
     # Centralized Error Handlers
     @app.errorhandler(400)

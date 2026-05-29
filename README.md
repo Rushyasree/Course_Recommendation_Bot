@@ -81,10 +81,35 @@ npm install
 npm run dev
 ```
 
-Default URLs:
+Default separated-development URLs:
 
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:5000/api/health`
+
+## Single-Service Version
+
+ElevateAI can run as one service. React is built into `frontend/dist`, then Flask serves both the frontend and `/api/*` from the same port.
+
+```bash
+cd frontend
+npm install
+$env:VITE_API_URL="/api"
+npm run build
+
+cd ../backend
+python run.py
+```
+
+Open:
+
+- App: `http://localhost:5000`
+- API health: `http://localhost:5000/api/health`
+
+On Windows PowerShell:
+
+```powershell
+.\run-single.ps1
+```
 
 ## Environment Variables
 
@@ -149,10 +174,11 @@ Vercel + Render:
 - Set `VITE_API_URL` to the backend `/api` URL.
 - Configure `CORS_ORIGINS` with the Vercel domain.
 
-Docker:
+Single Docker deployment:
 
 ```bash
-docker compose up --build
+docker build -t elevateai .
+docker run -p 5000:5000 --env SECRET_KEY=change-me --env JWT_SECRET_KEY=change-me elevateai
 ```
 
 ## Resume Description

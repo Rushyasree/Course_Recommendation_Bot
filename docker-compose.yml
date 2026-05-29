@@ -1,10 +1,12 @@
 version: '3.8'
 
 services:
-  backend:
+  elevateai:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
     ports:
       - "5000:5000"
     env_file:
@@ -12,9 +14,11 @@ services:
     environment:
       - PORT=5000
       - FLASK_DEBUG=false
-      - DATABASE_URL=sqlite:///recommender.db
+      - CHROMA_ENABLED=false
+      - PRECOMPUTE_EMBEDDINGS=false
+      - DATABASE_URL=sqlite:////app/data/recommender.db
     volumes:
-      - backend-db:/app/backend
+      - elevateai-data:/app/data
     restart: always
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
@@ -23,18 +27,5 @@ services:
       retries: 3
       start_period: 15s
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: /api
-    ports:
-      - "80:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: always
-
 volumes:
-  backend-db:
+  elevateai-data:
