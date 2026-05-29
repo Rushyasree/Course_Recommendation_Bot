@@ -163,16 +163,18 @@ CI runs backend compilation, backend tests, and frontend production build.
 
 ## Deployment
 
-Render:
+Render single-service:
 - Use `render.yaml`.
+- The app is deployed as one Docker web service.
 - Set production environment variables in the Render dashboard.
-- Prefer PostgreSQL for deployed persistence.
+- Open the app at the service URL and the API at `/api/health`.
 
 Vercel + Render:
 - Deploy frontend to Vercel.
-- Deploy Flask API to Render.
-- Set `VITE_API_URL` to the backend `/api` URL.
-- Configure `CORS_ORIGINS` with the Vercel domain.
+- Keep Flask API on Render.
+- Use `vercel.json` to build `frontend/dist`.
+- `/api/*` is rewritten to `https://elevateai-m23m.onrender.com/api/*`.
+- Add the final Vercel domain to `CORS_ORIGINS` in Render if browser requests are blocked.
 
 Single Docker deployment:
 
