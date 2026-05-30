@@ -2,7 +2,8 @@ FROM node:20-bookworm-slim AS frontend-build
 
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm ci --include=optional \
+    && npm install @rollup/rollup-linux-x64-gnu@4.44.0 --no-save
 COPY frontend/ ./
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
