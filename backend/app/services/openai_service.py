@@ -1,98 +1,116 @@
-import os
-from openai import OpenAI
 import logging
+import os
+
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
+
 def get_openai_client():
-    """Returns an authenticated OpenAI client if the API key is present."""
-    api_key = os.getenv("OPENAI_API_KEY", "")
+    """Return an authenticated OpenAI client or raise so the router can fallback."""
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
-        logger.warning("OPENAI_API_KEY is not set. OpenAI API calls will fail.")
-        return None
+        raise ConnectionError("OPENAI_API_KEY is not configured")
+
     try:
         return OpenAI(api_key=api_key)
-    except Exception as e:
-        logger.error(f"Failed to initialize OpenAI Client: {str(e)}")
-        return None
+    except Exception as exc:
+        logger.error("Failed to initialize OpenAI client: %s", exc)
+        raise
+
 
 def call_openai_assistant(interest, level):
-    """Fallback zero-context LLM suggestion (if database is empty or not seeded)."""
+    """Zero-context LLM suggestion used when retrieved course context is unavailable."""
     client = get_openai_client()
-    if not client:
-        return "⚠️ OpenAI API key is missing or not configured. Please supply an API key in the environment."
-        
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional educational and career advisor. Format your recommendations with bold titles, concise bullet points, and markdown links."},
-                {"role": "user", "content": f"Suggest 2 online courses for someone interested in {interest} with {level} skill level. Include course titles, platforms, and realistic links."}
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a professional educational and career advisor. "
+                        "Format recommendations with bold titles, concise bullets, and markdown links."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Suggest 2 online courses for someone interested in {interest} "
+                        f"with {level} skill level. Include course titles, platforms, and realistic links."
+                    ),
+                },
             ],
             temperature=0.7,
-            max_tokens=350
+            max_tokens=350,
         )
         return response.choices[0].message.content.strip()
-    except Exception as e:
-        logger.error(f"Error calling OpenAI API: {str(e)}")
-        return "⚠️ Couldn't fetch AI-based recommendations at the moment. Let's try again in a few seconds."
+    except Exception as exc:
+        logger.error("OpenAI assistant request failed: %s", exc)
+        raise
+
 
 def call_openai_rag_assistant(interest, level, retrieved_courses):
     """
-    Retrieval-Augmented Generation (RAG) assistant pipeline.
-    Uses retrieved database courses as strict context to prevent hallucinations.
+    Retrieval-Augmented Generation assistant.
+
+    Failures are intentionally raised so ai_router can rotate to Gemini,
+    Claude, and finally the local TF-IDF fallback.
     """
     client = get_openai_client()
-    if not client:
-        # If client cannot initialize, generate a structured markdown response using local courses
-        logger.warning("RAG fallback: OpenAI client is offline. Compiling local database details.")
-        course_text = "\n\n".join([
-            f"🔹 **{c.title}** by {c.provider}:\n[{c.link}]({c.link})"
-            for c in retrieved_courses
-        ])
-        return f"Here are the top matches from our local catalog:\n\n{course_text}"
 
     try:
-        # Compile retrieved courses into strict context string
         context_items = []
-        for c in retrieved_courses:
+        for course in retrieved_courses:
             context_items.append(
-                f"- Title: {c.title}\n  Provider: {c.provider}\n  Category: {c.category}\n  Level: {c.level}\n  Link: {c.link}\n  Tags: {c.tags}"
+                "- Title: {title}\n"
+                "  Provider: {provider}\n"
+                "  Category: {category}\n"
+                "  Level: {level}\n"
+                "  Link: {link}\n"
+                "  Tags: {tags}".format(
+                    title=course.title,
+                    provider=course.provider,
+                    category=course.category,
+                    level=course.level,
+                    link=course.link,
+                    tags=course.tags,
+                )
             )
         courses_context = "\n\n".join(context_items)
 
         system_prompt = (
-            "You are a professional educational advisor and career mentor. Your goal is to suggest matching online courses "
-            "based strictly on a verified local database.\n\n"
-            "Here is the verified list of database courses in markdown format:\n"
+            "You are a professional educational advisor and career mentor. "
+            "Recommend matching online courses based strictly on this verified local database.\n\n"
             f"{courses_context}\n\n"
-            "CRITICAL INSTRUCTIONS:\n"
-            "1. You MUST ONLY recommend courses from the list provided above. Do NOT invent, hallucinate, or recommend outside courses.\n"
-            "2. Format each recommendation with a leading '🔹' followed by the **Title** by Provider, and provide the exact enrollment URL in brackets immediately below.\n"
-            "3. Add a short explanation (1-2 sentences) of why this course is highly suitable for their career development.\n"
-            "4. If no courses in the list match the user's specific domain closely, tell them that there is no exact database match, and suggest the closest alternative from this list. Never suggest a non-existent course."
+            "Rules:\n"
+            "1. Recommend only courses from the verified list above.\n"
+            "2. Do not invent course titles, providers, or URLs.\n"
+            "3. Include a short reason for each recommendation.\n"
+            "4. If there is no exact match, say so and suggest the closest course from the list."
         )
 
-        user_prompt = f"Suggest the best 2 courses for a student interested in '{interest}' at a '{level}' skill level from the verified database."
+        user_prompt = (
+            f"Suggest the best 2 courses for a student interested in '{interest}' "
+            f"at a '{level}' skill level from the verified database."
+        )
 
-        logger.info(f"Invoking RAG OpenAI completion with gpt-4o-mini. Context size: {len(retrieved_courses)} courses.")
+        logger.info(
+            "Invoking OpenAI RAG completion with gpt-4o-mini. Context size: %s courses.",
+            len(retrieved_courses),
+        )
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
             ],
-            temperature=0.4, # Low temperature to prevent hallucinations
-            max_tokens=400
+            temperature=0.4,
+            max_tokens=400,
         )
         return response.choices[0].message.content.strip()
-        
-    except Exception as e:
-        logger.error(f"Error calling OpenAI RAG completing service: {str(e)}")
-        # Graceful fallback: return local database courses
-        course_text = "\n\n".join([
-            f"🔹 **{c.title}** by {c.provider}:\n[{c.link}]({c.link})"
-            for c in retrieved_courses
-        ])
-        return f"⚠️ OpenAI API experienced an error, but here are the matched courses from our local catalog:\n\n{course_text}"
+    except Exception as exc:
+        logger.error("OpenAI RAG request failed: %s", exc)
+        raise
