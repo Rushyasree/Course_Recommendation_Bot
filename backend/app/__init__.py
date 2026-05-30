@@ -49,10 +49,8 @@ def create_app(config_class=Config):
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])
     def health_check():
-        from backend.app.services.ai_router import get_provider_health
         return jsonify({
-            'status': 'healthy',
-            'providers': get_provider_health()
+            'status': 'healthy'
         })
 
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
